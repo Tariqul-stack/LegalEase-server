@@ -4,6 +4,11 @@ const mongoose = require('mongoose');
 require('dotenv').config();
 
 const authRoutes = require('./routes/auth.routes');
+const lawyerRoutes = require('./routes/lawyer.routes');
+const hiringRoutes = require('./routes/hiring.routes');
+const commentRoutes = require('./routes/comment.routes');
+const adminRoutes = require('./routes/admin.routes');
+const userRoutes = require('./routes/user.routes');
 
 const app = express();
 app.use(cors());
@@ -16,6 +21,11 @@ mongoose.connect(process.env.MONGO_DB_URL)
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/lawyers', lawyerRoutes);
+app.use('/api/hirings', hiringRoutes);
+app.use('/api/comments', commentRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/users', userRoutes);
 
 app.get('/', (req, res) => {
     res.json({ message: 'LegalEase Server Running!' });
@@ -23,18 +33,3 @@ app.get('/', (req, res) => {
 
 const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-
-const lawyerRoutes = require('./routes/lawyer.routes');
-app.use('/api/lawyers', lawyerRoutes);
-
-const hiringRoutes = require('./routes/hiring.routes');
-app.use('/api/hirings', hiringRoutes);
-
-const commentRoutes = require('./routes/comment.routes');
-app.use('/api/comments', commentRoutes);
-
-const adminRoutes = require('./routes/admin.routes');
-app.use('/api/admin', adminRoutes);
-
-const userRoutes = require('./routes/user.routes');
-app.use('/api/users', userRoutes);
