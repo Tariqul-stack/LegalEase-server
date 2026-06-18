@@ -29,3 +29,6 @@ app.use('/api/lawyers', lawyerRoutes);
 
 const hiringRoutes = require('./routes/hiring.routes');
 app.use('/api/hirings', hiringRoutes);
+
+const commentRoutes = require('./routes/comment.routes');
+app.use('/api/comments', commentRoutes);
