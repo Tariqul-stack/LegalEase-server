@@ -32,3 +32,6 @@ app.use('/api/hirings', hiringRoutes);
 
 const commentRoutes = require('./routes/comment.routes');
 app.use('/api/comments', commentRoutes);
+
+const adminRoutes = require('./routes/admin.routes');
+app.use('/api/admin', adminRoutes);
