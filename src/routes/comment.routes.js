@@ -15,7 +15,6 @@ router.post('/', verifyToken, checkRole('user'), async (req, res) => {
         const hiring = await Hiring.findOne({
             userId: req.user.id,
             lawyerId,
-            status: 'accepted',
         });
 
         if (!hiring) {

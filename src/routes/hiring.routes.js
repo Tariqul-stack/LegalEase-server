@@ -2,8 +2,10 @@ const express = require('express');
 const router = express.Router();
 const Hiring = require('../models/hiring.model');
 const Lawyer = require('../models/lawyer.model');
+const Transaction = require('../models/transaction.model');
 const verifyToken = require('../middleware/verifyToken');
 const checkRole = require('../middleware/checkRole');
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 // CREATE hiring request (user only)
 router.post('/', verifyToken, checkRole('user'), async (req, res) => {
@@ -59,6 +61,54 @@ router.patch('/:id/status', verifyToken, checkRole('lawyer'), async (req, res) =
             { new: true }
         );
         res.status(200).json({ message: `Hiring ${status}`, hiring });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error });
+    }
+});
+
+// CREATE Stripe payment intent
+router.post('/:id/pay', verifyToken, async (req, res) => {
+    try {
+        const hiring = await Hiring.findById(req.params.id);
+        if (!hiring) return res.status(404).json({ message: 'Hiring not found' });
+
+        const paymentIntent = await stripe.paymentIntents.create({
+            amount: hiring.fee * 100,
+            currency: 'usd',
+        });
+
+        res.status(200).json({ clientSecret: paymentIntent.client_secret });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error });
+    }
+});
+
+// CONFIRM successful payment
+router.post('/:id/confirm-payment', verifyToken, async (req, res) => {
+    try {
+        const { transactionId } = req.body;
+        if (!transactionId) return res.status(400).json({ message: 'Transaction ID is required' });
+
+        const hiring = await Hiring.findById(req.params.id);
+        if (!hiring) return res.status(404).json({ message: 'Hiring not found' });
+
+        hiring.isPaid = true;
+        await hiring.save();
+
+        const lawyer = await Lawyer.findById(hiring.lawyerId);
+        if (!lawyer) return res.status(404).json({ message: 'Lawyer not found' });
+
+        await Transaction.create({
+            userId: hiring.userId,
+            lawyerId: hiring.lawyerId,
+            hiringId: hiring._id,
+            userEmail: hiring.clientEmail,
+            lawyerEmail: lawyer.email,
+            amount: hiring.fee,
+            transactionId,
+        });
+
+        res.status(200).json({ message: 'Payment confirmed' });
     } catch (error) {
         res.status(500).json({ message: 'Server error', error });
     }
